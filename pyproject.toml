@@ -1,0 +1,32 @@
+[project]
+name = "gtm-growth-os"
+version = "0.1.0"
+description = "End-to-end GTM planning command center: finance targets, ACV, pipeline, capacity, quota, comp, territories, demand gen, and BDR planning."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "streamlit>=1.40",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "plotly>=5.20",
+  "duckdb>=1.0",
+  "polars>=1.0",
+  "scikit-learn>=1.4",
+  "scipy>=1.12",
+  "openpyxl>=3.1",
+  "rich>=13.7",
+  "python-dotenv>=1.0"
+]
+
+[project.optional-dependencies]
+wow = [
+  "ortools>=9.10",
+  "networkx>=3.3",
+  "great-tables>=0.15"
+]
+
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
