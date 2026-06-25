@@ -23,6 +23,17 @@ from gtm_growth_os.finance import allocate_new_arr_by_segment, finance_target_pl
 from gtm_growth_os.pipeline import pipeline_waterfall
 from gtm_growth_os.scenarios import monte_carlo_attainment, scenario_summary
 from gtm_growth_os.territories import greedy_balance_territories, territory_summary
+from gtm_growth_os.operating_rhythm import build_cco_operating_rhythm, build_operating_calendar, operating_health_score
+from gtm_growth_os.forecast_cadence import build_forecast_call_console, build_forecast_pre_read, forecast_call_decision_log
+from gtm_growth_os.action_tracker import build_action_risk_tracker, summarize_action_tracker
+from gtm_growth_os.standards_library import (
+    build_pipeline_stage_standards,
+    build_forecast_category_standards,
+    build_rules_of_engagement,
+    pipeline_hygiene_scorecard,
+)
+from gtm_growth_os.planning_control_tower import build_annual_planning_control_tower, planning_status_summary
+from gtm_growth_os.process_ai import build_operating_assistant_outputs
 
 segments = ["SMB", "Mid-Market", "Enterprise", "Strategic"]
 acv = {"SMB": 18000, "Mid-Market": 55000, "Enterprise": 145000, "Strategic": 330000}
@@ -49,6 +60,22 @@ inbound = inbound_funnel_requirements(pipe["pipeline_required"].sum(), 90_000, 0
 sim = monte_carlo_attainment(targets["new_arr_target"].sum(), pipe["pipeline_required"].sum(), 0.20, 90_000, 0.12, simulations=100)
 summary = scenario_summary(sim)
 
+cco_rhythm = build_cco_operating_rhythm()
+calendar = build_operating_calendar()
+forecast_console = build_forecast_call_console(targets, pipe)
+forecast_pre_read = build_forecast_pre_read(forecast_console)
+decision_log = forecast_call_decision_log(forecast_console)
+actions = build_action_risk_tracker(forecast_console, cfo_cap)
+action_summary = summarize_action_tracker(actions)
+stages = build_pipeline_stage_standards()
+forecast_categories = build_forecast_category_standards()
+roe = build_rules_of_engagement()
+hygiene = pipeline_hygiene_scorecard(forecast_console)
+planning = build_annual_planning_control_tower()
+planning_summary = planning_status_summary(planning)
+health = operating_health_score(forecast_console, actions, planning)
+assistant_outputs = build_operating_assistant_outputs(forecast_console, actions, planning)
+
 assert finance.shape[0] == 4
 assert targets["new_arr_target"].sum() > 0
 assert pipe["pipeline_required"].sum() > targets["new_arr_target"].sum()
@@ -62,6 +89,22 @@ assert len(territories) == 500
 assert not terr_summary.empty
 assert inbound["required"].sum() > 0
 assert 0 <= summary["probability_of_hit"] <= 1
+assert len(cco_rhythm) >= 5
+assert not calendar.empty
+assert not forecast_console.empty
+assert not forecast_pre_read.empty
+assert not decision_log.empty
+assert not actions.empty
+assert not action_summary.empty
+assert not stages.empty
+assert not forecast_categories.empty
+assert not roe.empty
+assert not hygiene.empty
+assert not planning.empty
+assert not planning_summary.empty
+assert 0 <= health["operating_health_score"] <= 100
+assert "forecast_pre_read" in assistant_outputs
+assert "Annual Planning Status Update" in assistant_outputs["planning_update"]
 
 print("✅ GTM Growth OS smoke test passed.")
 print(f"Finance rows: {len(finance)}")
@@ -71,3 +114,6 @@ print(f"Territories generated: {terr_summary.shape[0]}")
 print(f"Probability of hit: {summary['probability_of_hit']:.1%}")
 print(f"CFO/CRO capacity rows: {len(cfo_cap)}")
 print(f"Capacity cohorts: {len(cohorts)}")
+print(f"Operating health: {health['operating_health_score']:.1f}/100")
+print(f"Forecast console rows: {len(forecast_console)}")
+print(f"Action tracker rows: {len(actions)}")

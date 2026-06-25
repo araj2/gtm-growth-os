@@ -1,0 +1,25 @@
+forecast_submissions:
+  due: "Friday EOD before Monday CCO call"
+  required_fields:
+    - commit_forecast
+    - best_case_forecast
+    - upside_forecast
+    - large_deal_notes
+    - manager_risk_note
+pipeline_hygiene:
+  minimum_score: 80
+  required_fields:
+    - next_step
+    - close_date
+    - amount
+    - economic_buyer
+    - stage
+    - source
+close_date_movement:
+  max_pushes_before_inspection: 2
+quota_deployment:
+  requires:
+    - approved_targets
+    - locked_territories
+    - capacity_model_reconciled_to_plan
+    - comp_plan_approved

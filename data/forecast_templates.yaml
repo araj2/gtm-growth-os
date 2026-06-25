@@ -1,0 +1,17 @@
+weekly_forecast_call:
+  sections:
+    - submission_status
+    - commit_movement
+    - best_case_changes
+    - pipeline_created
+    - pipeline_slipped
+    - hygiene_exceptions
+    - action_items
+pipeline_review:
+  sections:
+    - pipeline_coverage
+    - source_mix
+    - conversion_rates
+    - bdr_activity
+    - territory_focus
+    - demand_gen_actions

@@ -1,3 +1,27 @@
+Metadata-Version: 2.4
+Name: gtm-growth-os
+Version: 0.1.0
+Summary: End-to-end GTM operating system: annual planning, finance targets, pipeline, capacity, quota, comp, territories, demand gen, BDR planning, forecast cadence, action tracking, and operating standards.
+Requires-Python: <3.14,>=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: streamlit>=1.40
+Requires-Dist: pandas>=2.2
+Requires-Dist: numpy>=1.26
+Requires-Dist: plotly>=5.20
+Requires-Dist: duckdb>=1.0
+Requires-Dist: polars>=1.0
+Requires-Dist: scikit-learn>=1.4
+Requires-Dist: scipy>=1.12
+Requires-Dist: openpyxl>=3.1
+Requires-Dist: rich>=13.7
+Requires-Dist: python-dotenv>=1.0
+Provides-Extra: ai
+Requires-Dist: anthropic>=0.50; extra == "ai"
+Provides-Extra: wow
+Requires-Dist: ortools>=9.10; extra == "wow"
+Requires-Dist: networkx>=3.3; extra == "wow"
+Requires-Dist: great-tables>=0.15; extra == "wow"
+
 # GTM Growth OS 🚀
 
 A portfolio-grade, end-to-end **GTM Operating System** for a scaling revenue organization.

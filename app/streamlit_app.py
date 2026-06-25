@@ -32,6 +32,12 @@ from gtm_growth_os.pipeline import pipeline_requirements, pipeline_waterfall
 from gtm_growth_os.scenarios import executive_narrative, monte_carlo_attainment, scenario_summary
 from gtm_growth_os.sql import duckdb_market_query
 from gtm_growth_os.territories import greedy_balance_territories, territory_summary
+from gtm_growth_os.operating_rhythm import build_cco_operating_rhythm, build_operating_calendar, operating_health_score
+from gtm_growth_os.forecast_cadence import build_forecast_call_console, build_forecast_pre_read, forecast_call_decision_log
+from gtm_growth_os.action_tracker import build_action_risk_tracker, summarize_action_tracker
+from gtm_growth_os.standards_library import build_pipeline_stage_standards, build_forecast_category_standards, build_rules_of_engagement, pipeline_hygiene_scorecard
+from gtm_growth_os.planning_control_tower import build_annual_planning_control_tower, planning_status_summary
+from gtm_growth_os.process_ai import build_operating_assistant_outputs
 
 st.set_page_config(page_title="GTM Growth OS", page_icon="🚀", layout="wide")
 
@@ -63,7 +69,7 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 st.title("🚀 GTM Growth OS")
-st.caption("A board-to-rep end-to-end GTM planning engine: finance targets → ACV → pipeline → capacity → quota → comp → territories → demand gen → BDR outbound.")
+st.caption("A board-to-rep GTM operating system: annual planning model + CCO operating rhythm + forecast cadence + execution accountability.")
 
 with st.sidebar:
     st.header("Operating Plan")
@@ -139,6 +145,23 @@ comp_df = segment_comp_summary(quota, ote)
 accounts = generate_account_universe(n=2600, seed=7)
 market_query = duckdb_market_query(accounts)
 
+# Operating rhythm layer: connects annual planning to weekly execution discipline.
+cco_rhythm_df = build_cco_operating_rhythm()
+operating_calendar_df = build_operating_calendar()
+forecast_console_df = build_forecast_call_console(segment_targets, waterfall)
+forecast_pre_read_df = build_forecast_pre_read(forecast_console_df)
+forecast_decision_log_df = forecast_call_decision_log(forecast_console_df)
+action_tracker_df = build_action_risk_tracker(forecast_console_df, cfo_capacity_df)
+action_summary_df = summarize_action_tracker(action_tracker_df)
+stage_standards_df = build_pipeline_stage_standards()
+forecast_standards_df = build_forecast_category_standards()
+roe_df = build_rules_of_engagement()
+pipeline_hygiene_df = pipeline_hygiene_scorecard(forecast_console_df)
+planning_control_df = build_annual_planning_control_tower()
+planning_summary_df = planning_status_summary(planning_control_df)
+operating_health = operating_health_score(forecast_console_df, action_tracker_df, planning_control_df)
+assistant_outputs = build_operating_assistant_outputs(forecast_console_df, action_tracker_df, planning_control_df)
+
 metrics = board_metrics(finance_df)
 total_pipeline_required = float(waterfall["pipeline_required"].sum())
 weighted_acv = float(segment_targets["new_arr_target"].sum() / segment_targets["closed_won_deals_required"].sum())
@@ -166,6 +189,8 @@ elif sim_summary["probability_of_hit"] < 0.70:
 else:
     st.success("This plan is structurally credible. The model still exposes where execution risk can break it.")
 
+st.info(f"Operating rhythm health: {operating_health['operating_health_score']:.1f}/100 | Forecast submission rate: {operating_health['forecast_submission_rate']:.0%} | Open escalations: {int(operating_health['escalations_open'])}")
+
 tabs = st.tabs([
     "1 Board targets",
     "2 ACV + pipeline",
@@ -176,6 +201,12 @@ tabs = st.tabs([
     "7 Demand gen + BDR",
     "8 Scenario war room",
     "9 Export + narrative",
+    "10 CCO rhythm",
+    "11 Forecast console",
+    "12 Standards library",
+    "13 Action + risk",
+    "14 Planning tower",
+    "15 Claude assistant",
 ])
 
 with tabs[0]:
@@ -522,6 +553,17 @@ with tabs[8]:
         "territory_summary": summary if "summary" in locals() else pd.DataFrame(),
         "demand_gen_channels": channel_mix if "channel_mix" in locals() else pd.DataFrame(),
         "scenario_simulation": sim.head(500),
+        "cco_operating_rhythm": cco_rhythm_df,
+        "operating_calendar": operating_calendar_df,
+        "forecast_console": forecast_console_df,
+        "forecast_pre_read": forecast_pre_read_df,
+        "forecast_decision_log": forecast_decision_log_df,
+        "action_tracker": action_tracker_df,
+        "pipeline_hygiene": pipeline_hygiene_df,
+        "stage_standards": stage_standards_df,
+        "forecast_standards": forecast_standards_df,
+        "rules_of_engagement": roe_df,
+        "planning_control_tower": planning_control_df,
     }
     st.download_button(
         label="Download GTM operating plan Excel pack",
@@ -537,4 +579,158 @@ with tabs[8]:
         mime="text/markdown",
     )
 
-st.caption("Built as a portfolio project to demonstrate strategic finance, GTM operations, RevOps analytics, territory design, demand generation modeling, and sales planning in one system.")
+
+
+with tabs[9]:
+    st.subheader("CCO operating rhythm")
+    st.markdown("This layer turns the planning model into a weekly/monthly/quarterly operating cadence: who owes what, when inputs are due, what decisions leaders make, and which artifacts come out of each review.")
+    h1, h2, h3, h4 = st.columns(4)
+    h1.metric("Operating health", f"{operating_health['operating_health_score']:.1f}/100")
+    h2.metric("Forecast submission", pct(operating_health["forecast_submission_rate"]))
+    h3.metric("Planning readiness", pct(operating_health["planning_readiness_rate"]))
+    h4.metric("Open escalations", int(operating_health["escalations_open"]))
+
+    st.markdown("#### Cadence map")
+    st.dataframe(cco_rhythm_df, use_container_width=True, hide_index=True)
+
+    st.markdown("#### Quarter operating calendar")
+    st.dataframe(operating_calendar_df, use_container_width=True, hide_index=True)
+
+    fig = px.bar(
+        operating_calendar_df.groupby(["quarter_week", "status"], as_index=False).size(),
+        x="quarter_week",
+        y="size",
+        color="status",
+        title="Operating calendar load and status by week",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+with tabs[10]:
+    st.subheader("Forecast call console")
+    st.markdown("A Monday-morning console for the CCO: forecast submissions, commit/best-case coverage, pipeline movement, hygiene, close-date churn, and the inspection asks leaders should focus on.")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Submitted leaders", f"{int((forecast_console_df['submission_status'] == 'Submitted').sum())}/{len(forecast_console_df)}")
+    c2.metric("Avg pipeline coverage", f"{forecast_console_df['pipeline_coverage'].mean():.2f}x")
+    c3.metric("Avg forecast coverage", pct(forecast_console_df["forecast_coverage_vs_target"].mean()))
+    c4.metric("High-risk segments", int((forecast_console_df["inspection_risk"] == "High").sum()))
+
+    st.dataframe(
+        forecast_console_df.style.format({
+            "target_arr": "${:,.0f}",
+            "required_pipeline": "${:,.0f}",
+            "current_pipeline": "${:,.0f}",
+            "pipeline_coverage": "{:.2f}x",
+            "commit_forecast": "${:,.0f}",
+            "best_case_forecast": "${:,.0f}",
+            "upside_forecast": "${:,.0f}",
+            "forecast_coverage_vs_target": "{:.0%}",
+            "pipeline_created_this_week": "${:,.0f}",
+            "pipeline_slipped_this_week": "${:,.0f}",
+            "pull_in_opportunity": "${:,.0f}",
+            "hygiene_score": "{:.0f}",
+        }),
+        use_container_width=True,
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        fig = px.bar(forecast_console_df, x="segment", y="pipeline_coverage", color="inspection_risk", title="Pipeline coverage by segment")
+        fig.add_hline(y=1.0, line_dash="dash", annotation_text="Required coverage")
+        st.plotly_chart(fig, use_container_width=True)
+    with c2:
+        fig = px.bar(forecast_console_df, x="segment", y="forecast_coverage_vs_target", color="inspection_risk", title="Weighted forecast coverage vs target")
+        fig.update_layout(yaxis_tickformat=".0%")
+        fig.add_hline(y=0.90, line_dash="dash", annotation_text="Exec inspection threshold")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("#### Forecast pre-read asks")
+    st.dataframe(forecast_pre_read_df, use_container_width=True, hide_index=True)
+
+    st.markdown("#### Decision log")
+    st.dataframe(forecast_decision_log_df, use_container_width=True, hide_index=True)
+
+with tabs[11]:
+    st.subheader("GTM standards library")
+    st.markdown("This is the tribal-knowledge-to-operating-system layer: common stage criteria, forecast category definitions, hygiene rules, and rules of engagement across Sales and Strategy.")
+
+    st.markdown("#### Pipeline hygiene scorecard")
+    st.dataframe(pipeline_hygiene_df, use_container_width=True, hide_index=True)
+    fig = px.bar(pipeline_hygiene_df, x="segment", y="hygiene_score", color="standard_status", title="Pipeline hygiene by segment")
+    fig.add_hline(y=80, line_dash="dash", annotation_text="Standard")
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("#### Stage standards")
+    st.dataframe(stage_standards_df, use_container_width=True, hide_index=True)
+
+    st.markdown("#### Forecast category standards")
+    st.dataframe(forecast_standards_df, use_container_width=True, hide_index=True)
+
+    st.markdown("#### Rules of engagement")
+    st.dataframe(roe_df, use_container_width=True, hide_index=True)
+
+with tabs[12]:
+    st.subheader("Action + risk tracker")
+    st.markdown("A cross-functional accountability layer for commitments coming out of forecast calls, pipeline reviews, and operating reviews.")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Open actions", len(action_tracker_df))
+    c2.metric("P0 actions", int((action_tracker_df["priority"] == "P0").sum()))
+    c3.metric("Escalations", int((action_tracker_df["escalation_flag"] == "Escalate").sum()))
+    c4.metric("Avg days open", f"{action_tracker_df['days_open'].mean():.1f}")
+
+    st.dataframe(action_tracker_df, use_container_width=True, hide_index=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        fig = px.bar(action_summary_df, x="function", y="actions", color="status", title="Actions by function and status")
+        st.plotly_chart(fig, use_container_width=True)
+    with c2:
+        fig = px.bar(action_tracker_df, x="risk_category", y="days_open", color="priority", title="Risk aging by category")
+        st.plotly_chart(fig, use_container_width=True)
+
+with tabs[13]:
+    st.subheader("Annual planning control tower")
+    st.markdown("The program-management backbone for in-year and annual planning: timelines, DRIs, inputs, dependencies, blockers, and executive decisions required before quota/territory/comp deployment.")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Workstreams", len(planning_control_df))
+    c2.metric("Blocked / at risk", int(planning_control_df["status"].isin(["Blocked", "At risk"]).sum()))
+    c3.metric("Needs input", int((planning_control_df["status"] == "Needs input").sum()))
+    c4.metric("Executive decisions", len(planning_control_df))
+
+    st.dataframe(planning_control_df, use_container_width=True, hide_index=True)
+    c1, c2 = st.columns([1, 1.2])
+    with c1:
+        st.dataframe(planning_summary_df, use_container_width=True, hide_index=True)
+    with c2:
+        fig = px.bar(planning_control_df, x="due_week", color="status", title="Planning workstream status by due week")
+        st.plotly_chart(fig, use_container_width=True)
+
+with tabs[14]:
+    st.subheader("Claude operating assistant")
+    st.markdown("Offline deterministic mode produces Claude-style operating artifacts without API keys. If you later wire in the Anthropic API, this becomes a live operating assistant for pre-reads, risk memos, and planning updates.")
+    st.info(f"Assistant mode: {assistant_outputs['mode']}")
+
+    doc_type = st.radio(
+        "Artifact to generate",
+        ["Forecast call pre-read", "GTM operating risk memo", "Annual planning status update"],
+        horizontal=True,
+    )
+    if doc_type == "Forecast call pre-read":
+        st.markdown(assistant_outputs["forecast_pre_read"])
+        download_name = "forecast_call_pre_read.md"
+        download_payload = assistant_outputs["forecast_pre_read"]
+    elif doc_type == "GTM operating risk memo":
+        st.markdown(assistant_outputs["risk_memo"])
+        download_name = "gtm_operating_risk_memo.md"
+        download_payload = assistant_outputs["risk_memo"]
+    else:
+        st.markdown(assistant_outputs["planning_update"])
+        download_name = "annual_planning_status_update.md"
+        download_payload = assistant_outputs["planning_update"]
+
+    st.download_button(
+        label="Download generated operating artifact",
+        data=download_payload.encode("utf-8"),
+        file_name=download_name,
+        mime="text/markdown",
+    )
+
+st.caption("Built as a portfolio project to demonstrate strategic finance, GTM operations, RevOps analytics, territory design, demand generation modeling, and sales planning, and CCO operating cadence in one system.")

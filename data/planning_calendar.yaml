@@ -1,0 +1,9 @@
+annual_planning:
+  W1: finance_plan
+  W2: segment_targets
+  W3: capacity_plan
+  W4: territory_design_marketing_bdr_plan
+  W5: quota_deployment
+  W6: comp_design
+  W7: systems_readiness
+  W8: enablement_rollout

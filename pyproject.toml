@@ -1,7 +1,7 @@
 [project]
 name = "gtm-growth-os"
 version = "0.1.0"
-description = "End-to-end GTM planning command center: finance targets, ACV, pipeline, capacity, quota, comp, territories, demand gen, and BDR planning."
+description = "End-to-end GTM operating system: annual planning, finance targets, pipeline, capacity, quota, comp, territories, demand gen, BDR planning, forecast cadence, action tracking, and operating standards."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
@@ -19,6 +19,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ai = [
+  "anthropic>=0.50"
+]
+
 wow = [
   "ortools>=9.10",
   "networkx>=3.3",
